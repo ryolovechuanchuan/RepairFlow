@@ -6,9 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,10 +29,7 @@ public class WorkOrderController {
     @GetMapping("/{id}")
     public WorkOrderResponse getById(@PathVariable("id") long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Work order not found"
-                ));
+                .orElseThrow(WorkOrderNotFoundException::new);
     }
 
     @PostMapping
@@ -49,12 +44,8 @@ public class WorkOrderController {
                 reporterId
         );
 
-        URI location = URI.create(
-                "/api/work-orders/" + created.id()
-        );
+        URI location = URI.create("/api/work-orders/" + created.id());
 
-        return ResponseEntity
-                .created(location)
-                .body(created);
+        return ResponseEntity.created(location).body(created);
     }
 }

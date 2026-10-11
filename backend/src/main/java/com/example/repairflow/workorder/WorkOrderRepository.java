@@ -3,12 +3,25 @@ package com.example.repairflow.workorder;
 import java.util.Optional;
 import java.time.ZoneOffset;
 import java.util.List;
-
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class WorkOrderRepository {
+
+    private static final RowMapper<WorkOrderResponse> WORK_ORDER_ROW_MAPPER =
+            (rs, rowNum) -> new WorkOrderResponse(
+                    rs.getLong("Id"),
+                    rs.getString("EquipmentName"),
+                    rs.getString("EquipmentLocation"),
+                    rs.getString("Description"),
+                    rs.getLong("ReporterId"),
+                    rs.getString("Status"),
+                    rs.getTimestamp("CreatedAt")
+                            .toLocalDateTime()
+                            .toInstant(ZoneOffset.UTC)
+            );
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -30,19 +43,8 @@ public class WorkOrderRepository {
                 ORDER BY Id DESC
                 """;
 
-        return jdbcTemplate.query(sql, (rs, rowNum) ->
-                new WorkOrderResponse(
-                        rs.getLong("Id"),
-                        rs.getString("EquipmentName"),
-                        rs.getString("EquipmentLocation"),
-                        rs.getString("Description"),
-                        rs.getLong("ReporterId"),
-                        rs.getString("Status"),
-                        rs.getTimestamp("CreatedAt")
-                                .toLocalDateTime()
-                                .toInstant(ZoneOffset.UTC)
-                )
-        );
+        return jdbcTemplate.query(sql, WORK_ORDER_ROW_MAPPER);
+
     }
     public Optional<WorkOrderResponse> findById(long id) {
         String sql = """
@@ -60,17 +62,7 @@ public class WorkOrderRepository {
 
         List<WorkOrderResponse> results = jdbcTemplate.query(
                 sql,
-                (rs, rowNum) -> new WorkOrderResponse(
-                        rs.getLong("Id"),
-                        rs.getString("EquipmentName"),
-                        rs.getString("EquipmentLocation"),
-                        rs.getString("Description"),
-                        rs.getLong("ReporterId"),
-                        rs.getString("Status"),
-                        rs.getTimestamp("CreatedAt")
-                                .toLocalDateTime()
-                                .toInstant(ZoneOffset.UTC)
-                ),
+                WORK_ORDER_ROW_MAPPER,
                 id
         );
 
@@ -102,17 +94,7 @@ public class WorkOrderRepository {
 
         return jdbcTemplate.queryForObject(
                 sql,
-                (rs, rowNum) -> new WorkOrderResponse(
-                        rs.getLong("Id"),
-                        rs.getString("EquipmentName"),
-                        rs.getString("EquipmentLocation"),
-                        rs.getString("Description"),
-                        rs.getLong("ReporterId"),
-                        rs.getString("Status"),
-                        rs.getTimestamp("CreatedAt")
-                                .toLocalDateTime()
-                                .toInstant(ZoneOffset.UTC)
-                ),
+                WORK_ORDER_ROW_MAPPER,
                 request.equipmentName(),
                 request.equipmentLocation(),
                 request.description(),
